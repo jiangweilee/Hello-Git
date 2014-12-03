@@ -1,10 +1,2 @@
-var http = require('http');
-var fs = require('fs');
-var through = require('through')
-
-var server = http.createServer(function (req, res) {
-  req.pipe(through(function(buff){
-    this.queue(buff.toString().toUpperCase());
-  })).pipe(res);
-
-}).listen(process.argv[2]);
+var request = require('request');
+process.stdin.pipe((request.post('http://localhost:8000/'))).pipe(process.stdout);
