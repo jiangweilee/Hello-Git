@@ -1,14 +1,6 @@
-var through =require('through');
-var split = require('split');
+var concat = require('concat-stream');
 
-var tr = through(write);
-var i=1;
-process.stdin.pipe(split()).pipe(tr).pipe(process.stdout);
-function write (line) {
-  if(i%2==1)
-    this.queue(line.toString().toLowerCase()+'\n');
-  else
-    this.queue(line.toString().toUpperCase()+'\n');
-
-    i++
-}
+process.stdin.pipe(concat(function (src) {
+  var s = src.toString().split('').reverse().join('');
+  console.log(s);
+}));
