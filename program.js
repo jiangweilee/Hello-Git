@@ -1,6 +1,10 @@
-var concat = require('concat-stream');
+var http = require('http');
+var fs = require('fs');
+var through = require('through')
 
-process.stdin.pipe(concat(function (src) {
-  var s = src.toString().split('').reverse().join('');
-  console.log(s);
-}));
+var server = http.createServer(function (req, res) {
+  req.pipe(through(function(buff){
+    this.queue(buff.toString().toUpperCase());
+  })).pipe(res);
+
+}).listen(process.argv[2]);
