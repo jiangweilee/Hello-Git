@@ -1,30 +1,20 @@
-var combine = require('stream-combiner')
-var split = require('split')
-var zlib = require('zlib')
+var crypto = require('crypto');
+var zlib = require('zlib');
+var tar = require('tar')
 var through = require('through')
 
-module.exports = function () {
-  var grouper = through(write,end);
-  var result;
+var parser = tar.Parse();
+parser.on('entry', function (e) {
+  if (e.type !== 'File') return;
+  e.pipe(
+    crypto.createHash('md5', { encoding: 'hex' }))
+    .pipe(through(null, end)).pipe(process.stdout);
 
-  function write(line){
-    if(line.length===0)return;
-    var content = JSON.parse(line);
-    if(content.type=='genre'){
-      if(result){
-        this.queue(JSON.stringify(result)+'\n');
-      }
-      result = {name:content.name,books:[]};
-    }else{
-      result.books.push(content.name);
-    }
-  }
+    function end () { this.queue(' ' + e.path + '\n') }
+});
 
-  function end(){
-    if(result)
-        this.queue(JSON.stringify(result)+'\n');
-    //else  don't use this
-        this.queue(null);
-      }
-      return combine(split(),grouper,zlib.createGzip());
-    }
+
+process.stdin.pipe(
+  crypto.createDecipher(process.argv[2], process.argv[3]))
+  .pipe(zlib.createGunzip())
+  .pipe(parser);
