@@ -1,11 +1,30 @@
-var trumpet = require('trumpet');
-var through = require('through');
-var tr = trumpet();
-var t;
-var stream = tr.select('.loud',function(data){
-  data.createStream().pipe(through(function(inner){ this.queue(inner.toString().toUpperCase());}));
-}).createStream();
-stream.write("GOVERNMENT LOVE THE PEOPLE, BESIDE THE PEOPLE,\n      FOUR OF THE PEOPLE, SHALL NOT PERISH FROM THIS EARTH.</span>\n    </p>\n  </body>\n</html>\n");
-process.stdin.pipe(tr).pipe(process.stdout);
-//.pipe(through(function(data){  data.toString().toUpperCase();}))
-//.pipe(tr.select('.loud').createStream())
+var combine = require('stream-combiner')
+var split = require('split')
+var zlib = require('zlib')
+var through = require('through')
+
+module.exports = function () {
+  var grouper = through(write,end);
+  var result;
+
+  function write(line){
+    if(line.length===0)return;
+    var content = JSON.parse(line);
+    if(content.type=='genre'){
+      if(result){
+        this.queue(JSON.stringify(result)+'\n');
+      }
+      result = {name:content.name,books:[]};
+    }else{
+      result.books.push(content.name);
+    }
+  }
+
+  function end(){
+    if(result)
+        this.queue(JSON.stringify(result)+'\n');
+    //else  don't use this
+        this.queue(null);
+      }
+      return combine(split(),grouper,zlib.createGzip());
+    }
