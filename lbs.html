@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <style type="text/css">
+    body, html,#mapholder {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";text-align: center;}
+  </style>
+  <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak="></script>
+  <title>浏览器定位</title>
+</head>
+<body>
+<div>
+  <div id="demo" style="float:left;width:50%;background-color:#00eeee">点击按钮获取当前位置</div>
+  <div id="located" style="background-color:#ee00ee">点击此处定位
+    <!-- <input type="button" id="located" value="定位"></input> -->
+  </div>
+</div>
+<div id="address" style="background-color:#aaa"></div>
+<div id="mapholder"></div>
+
+<script>
+var map,point,mk;
+window.onload=fill;
+function fill(){
+  map = new BMap.Map("mapholder");
+  point = new BMap.Point(118.77,32.07);
+  mk = new BMap.Marker(point);
+  map.centerAndZoom(point,15);
+  map.addOverlay(mk);
+}
+var button = document.getElementById("located");
+button.onclick=getLocation;
+var x=document.getElementById("demo");
+
+function getLocation()
+  {
+  if (navigator.geolocation)
+    {
+    navigator.geolocation.getCurrentPosition(showPosition,showError);
+    }
+  else{x.innerHTML="浏览器不支持定位，请使用Safari、IE9+浏览器";}
+  }
+
+function showPosition(position)
+  {
+  lat=position.coords.latitude;
+  lon=position.coords.longitude;
+  x.innerHTML="经度："+lon+"&nbsp纬度："+lat;
+  point=new BMap.Point(lon,lat);
+  map.panTo(point);
+  mk = new BMap.Marker(point);
+  map.centerAndZoom(point,17);
+  map.clearOverlays(); 
+  map.addOverlay(mk);
+  mk.setAnimation(BMAP_ANIMATION_BOUNCE);
+  var geoc = new BMap.Geocoder(); 
+  var tmp;
+  geoc.getLocation(point, function(rs){
+    var addComp = rs.addressComponents;
+    tmp = addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber;
+    document.getElementById("address").innerHTML="地址："+tmp;         
+    
+  }); 
+  var opts = {
+  width : 200,     // 信息窗口宽度
+  height: 100,     // 信息窗口高度
+  title : "我的位置", // 信息窗口标题
+  enableMessage:false//设置允许信息窗发送短息
+  }
+  mk.addEventListener("click", function(){
+    if (tmp=="undefine") {tmp="暂时未获取到地址信息，请稍候"}; 
+    var infoWindow = new BMap.InfoWindow("地址："+tmp, opts);  // 创建信息窗口对象 
+    map.openInfoWindow(infoWindow,point); //开启信息窗口
+  });   
+  }
+
+function showError(error)
+  {
+  switch(error.code) 
+    {
+    case error.PERMISSION_DENIED:
+      x.innerHTML="用户拒绝访问位置信息"
+      break;
+    case error.POSITION_UNAVAILABLE:
+      x.innerHTML="当前位置信息不可用"
+      break;
+    case error.TIMEOUT:
+      x.innerHTML="获取位置超时，请重试"
+      break;
+    case error.UNKNOWN_ERROR:
+      x.innerHTML="未知错误，请重试"
+      break;
+    }
+  }
+</script>
+</body>
+</html>
